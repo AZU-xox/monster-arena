@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MONSTER ARENA</title>
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;color:#f5f2ff;font-family:system-ui,sans-serif;
+ background:radial-gradient(ellipse at 50% 0%,#34527c,#111c38 48%,#080e1d);
+ min-height:100vh
+}
+header{
+ padding:18px;display:flex;justify-content:space-between;align-items:center;
+ flex-wrap:wrap;gap:12px;background:#101a30;border-bottom:1px solid #52688b
+}
+.logo{font-size:25px;font-weight:1000;letter-spacing:2px;color:#ffdf91}
+.wallet{display:flex;gap:9px}
+.wallet span{background:#202e49;border:1px solid #7185a5;border-radius:20px;padding:8px 13px}
+.hero{
+ text-align:center;padding:35px 15px;
+ background:linear-gradient(120deg,#172c4d,#304e73,#172442);
+ border-bottom:2px solid #9cb8d6;
+}
+.hero h1{font-size:clamp(30px,7vw,55px);margin:0;color:#ffe4a6;text-shadow:0 0 20px #e7a64d}
+.hero p{color:#d6e7ff}
+nav{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;padding:15px;background:#0c162a}
+button{
+ background:linear-gradient(#45658e,#233b60);color:white;
+ border:1px solid #8da9cf;border-radius:10px;padding:11px 15px;
+ font-weight:bold;cursor:pointer
+}
+button:hover{filter:brightness(1.2)}
+button:disabled{opacity:.4;cursor:not-allowed}
+nav button.active{border-color:#ffe08c;color:#ffe08c}
+main{max-width:1100px;margin:22px auto;padding:0 15px 50px}
+.screen{display:none}.screen.active{display:block}
+.panel{
+ background:rgba(12,23,44,.94);border:1px solid #536d91;
+ border-radius:17px;padding:20px;margin-bottom:18px;
+ box-shadow:0 12px 35px #0005
+}
+h2{color:#ffdc91;margin-top:0}
+.muted{color:#b9cbe5}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:15px}
+.monster{
+ --a:#694c91;--b:#192b4d;
+ background:radial-gradient(circle at 50% 20%,#fff5,transparent 45%),linear-gradient(145deg,var(--a),var(--b));
+ border:1px solid #a3b9d4;border-radius:17px;padding:14px;text-align:center;
+ box-shadow:inset 0 0 35px #ffffff18,0 8px 20px #0004;
+ overflow:hidden
+}
+.monster h3{margin:8px 0 3px}
+.rank{font-size:12px;color:#ffe6a4;font-weight:900;letter-spacing:2px}
+.face{width:120px;height:112px;margin:10px auto 5px;position:relative}
+.face .head{
+ position:absolute;left:15px;top:15px;width:90px;height:82px;
+ background:var(--skin);border:4px solid #17233b;border-radius:48% 48% 42% 42%;
+ box-shadow:inset -8px -8px 0 #0002,0 8px 10px #0005
+}
+.face .ear{position:absolute;top:0;width:32px;height:45px;background:var(--skin);border:4px solid #17233b;transform:rotate(18deg);border-radius:90% 10% 30% 20%}
+.face .ear.left{left:17px}.face .ear.right{right:17px;transform:rotate(-18deg)}
+.face .eye{position:absolute;top:43px;width:12px;height:17px;background:#fff;border:2px solid #18233a;border-radius:50%;z-index:2}
+.face .eye.left{left:40px}.face .eye.right{right:40px}
+.face .pupil{position:absolute;top:48px;width:5px;height:8px;background:#17233b;border-radius:50%;z-index:3}
+.face .pupil.left{left:44px}.face .pupil.right{right:44px}
+.face .mouth{position:absolute;top:68px;left:51px;width:18px;height:10px;border-bottom:3px solid #17233b;border-radius:50%;z-index:3}
+.face .mark{position:absolute;top:4px;left:48px;font-size:24px;z-index:4}
+.stats{display:flex;justify-content:space-around;font-size:13px;color:#dce9ff;margin:10px 0}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:13px}
+.notice{background:#101e36;border:1px solid #405c80;border-radius:12px;padding:13px;margin-top:12px;line-height:1.8}
+.stage{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 0;border-bottom:1px solid #40506d;flex-wrap:wrap}
+.hp{height:9px;background:#542d43;border-radius:20px;overflow:hidden;margin:6px 0}
+.hp span{display:block;height:100%;background:#5fe09a}
+.battlegrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fighter{background:#14233d;padding:10px;border-radius:10px;margin:6px 0}
+.log{height:210px;overflow:auto;background:#080f1e;border:1px solid #425b7b;padding:12px;border-radius:10px;line-height:1.8}
+@media(max-width:600px){header{align-items:flex-start;flex-direction:column}.battlegrid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+ <div class="logo">✦ MONSTER ARENA</div>
+ <div class="wallet">
+  <span>💎 <b id="pearls">3000</b></span>
+  <span>🪙 <b id="coins">500</b></span>
+ </div>
+</header>
+
+<section class="hero">
+ <h1>MONSTER ARENA</h1>
+ <p>雲海の彼方に眠る伝説。仲間を集め、最強のチームを作り上げろ。</p>
+</section>
+
+<nav>
+ <button class="active" data-tab="home">🏰 ホーム</button>
+ <button data-tab="gacha">✨ ガチャ</button>
+ <button data-tab="team">⚔️ チーム</button>
+ <button data-tab="stage">🗺️ ステージ</button>
+ <button data-tab="book">📖 図鑑</button>
+</nav>
+
+<main>
+<section id="home" class="screen active">
+ <div class="panel">
+  <h2>🏰 浮遊城・セレスティア</h2>
+  <p>星々が輝く天空の城。ここから冒険が始まる。</p>
+  <div class="actions">
+   <button onclick="tab('stage')">冒険に出発！</button>
+   <button onclick="tab('gacha')">召喚門へ</button>
+   <button onclick="tab('team')">チーム編成</button>
+  </div>
+  <div class="notice" id="daily">今日の無料10連を確認中...</div>
+ </div>
+ <div class="panel">
+  <h2>🌟 初期の仲間たち</h2>
+  <div id="homeCards" class="grid"></div>
+ </div>
+</section>
+
+<section id="gacha" class="screen">
+ <div class="panel">
+  <h2>✨ 星詠みの召喚門</h2>
+  <p>星の力を宿すモンスターを召喚しよう！</p>
+  <div class="notice">
+   UR：3% ／ SSR：12% ／ SR：25% ／ R：60%<br>
+   無料10連は毎日1回！重複したモンスターはコインに変換されるよ。
+  </div>
+  <div class="actions">
+   <button id="free" onclick="gacha(10,true)">🎁 無料10連</button>
+   <button onclick="gacha(1,false)">1回召喚 💎300</button>
+   <button onclick="gacha(10,false)">10回召喚 💎2700</button>
+  </div>
+  <div id="result" class="notice">召喚結果がここに表示されるよ。</div>
+ </div>
+</section>
+
+<section id="team" class="screen">
+ <div class="panel">
+  <h2>⚔️ チーム編成</h2>
+  <p class="muted">最大5体まで編成できるよ。育成もここから！</p>
+  <div id="teamCards" class="grid"></div>
+  <div class="notice" id="teamCount"></div>
+ </div>
+</section>
+
+<section id="stage" class="screen">
+ <div class="panel">
+  <h2>🗺️ 冒険ステージ</h2>
+  <p class="muted">チームを編成してステージに挑戦しよう！</p>
+  <div id="stages"></div>
+  <div id="battleResult" class="notice">出撃するステージを選んでね。</div>
+ </div>
+</section>
+
+<section id="book" class="screen">
+ <div class="panel">
+  <h2>📖 モンスター図鑑</h2>
+  <div id="bookCards" class="grid"></div>
+ </div>
+</section>
+</main>
+
+<script>
+const starters=[
+ {id:"flare",name:"フレアウルフ",element:"炎",rarity:"R",skin:"#e87943",a:"#a33d32",b:"#3c2037",atk:18,hp:92,mark:"🔥",desc:"燃えるたてがみを持つ勇敢な狼。"},
+ {id:"leaf",name:"リーフゴーレム",element:"草",rarity:"R",skin:"#80b96b",a:"#39764d",b:"#183d3d",atk:12,hp:130,mark:"🍃",desc:"森の記憶を守る苔むした巨人。"},
+ {id:"lilax",name:"ライラックス",element:"雷",rarity:"R",skin:"#b69ce9",a:"#6654a6",b:"#252c60",atk:20,hp:85,mark:"⚡",desc:"稲妻の尾を持つ素早い幻獣。"},
+ {id:"rock",name:"ロックベア",element:"地",rarity:"R",skin:"#b58b62",a:"#8a6749",b:"#3b302c",atk:14,hp:145,mark:"⛰️",desc:"岩の甲羅で仲間を守る大熊。"},
+ {id:"sky",name:"スカイフェンリル",element:"風",rarity:"R",skin:"#82cde5",a:"#397e9e",b:"#1b3158",atk:19,hp:90,mark:"🌪️",desc:"風を切り裂き空を駆ける幻獣。"}
+];
+const rarePool=[
+ {id:"magma",name:"マグマバジリスク",element:"炎",rarity:"SR",skin:"#ef9655",a:"#a34b24",b:"#451b29",atk:27,hp:120,mark:"🔥",desc:"溶岩を操る古代の爬虫類。"},
+ {id:"moon",name:"ムーンフェアリー",element:"光",rarity:"SSR",skin:"#e7d8ff",a:"#7777b7",b:"#263c70",atk:31,hp:115,mark:"🌙",desc:"月光の魔法を紡ぐ妖精。"},
+ {id:"abyss",name:"アビスドラゴン",element:"闇",rarity:"UR",skin:"#9573bb",a:"#633e83",b:"#17162f",atk:42,hp:165,mark:"🌌",desc:"深淵から目覚めた伝説の竜。"}
+];
+
+let data;
+try{data=JSON.parse(localStorage.getItem("monsterArenaSave"))}catch(e){}
+if(!data)data={pearls:3000,coins:500,owned:starters.map(m=>({...m,level:1})),team:starters.map(m=>m.id),cleared:0,freeDate:""};
+
+function save(){localStorage.setItem("monsterArenaSave",JSON.stringify(data));render()}
+function tab(id){
+ document.querySelectorAll(".screen").forEach(x=>x.classList.toggle("active",x.id===id));
+ document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("active",x.dataset.tab===id));
+}
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>tab(b.dataset.tab));
+
+function face(){
+ return `<div class="face">
+ <div class="ear left"></div><div class="ear right"></div>
+ <div class="head"></div><div class="mark">✦</div>
+ <div class="eye left"></div><div class="eye right"></div>
+ <div class="pupil left"></div><div class="pupil right"></div>
+ <div class="mouth"></div></div>`;
+}
+function card(m,editable=false){
+ return `<article class="monster" style="--a:${m.a};--b:${m.b};--skin:${m.skin}">
+ <div class="rank">${m.rarity}　${m.element}属性</div>${face()}
+ <h3>${m.name}</h3><div class="muted">${m.desc}</div>
+ <div class="stats"><span>Lv.${m.level||1}</span><span>攻 ${m.atk}</span><span>HP ${m.hp}</span></div>
+ ${editable?`<div class="actions">
+ <button onclick="toggleTeam('${m.id}')">${data.team.includes(m.id)?"編成解除":"チームに入れる"}</button>
+ <button onclick="levelUp('${m.id}')">育成 🪙100</button>
+ </div>`:""}
+ </article>`;
+}
+function render(){
+ document.getElementById("pearls").textContent=data.pearls;
+ document.getElementById("coins").textContent=data.coins;
+ document.getElementById("homeCards").innerHTML=starters.map(m=>card(m)).join("");
+ document.getElementById("teamCards").innerHTML=data.owned.map(m=>card(m,true)).join("");
+ document.getElementById("bookCards").innerHTML=data.owned.map(m=>card(m)).join("");
+ document.getElementById("teamCount").textContent=`編成中：${data.team.length}/5体`;
+ const today=new Date().toLocaleDateString("ja-JP");
+ const used=data.freeDate===today;
+ document.getElementById("free").disabled=used;
+ document.getElementById("daily").textContent=used?"本日の無料10連は使用済み！また明日遊びに来てね。":"🎁 本日の無料10連がまだ使えるよ！";
+ const names=["はじまりの草原","紅蓮の火山","雷鳴の峡谷","古代の岩窟","天空の神殿"];
+ document.getElementById("stages").innerHTML=names.map((name,i)=>`
+ <div class="stage"><div><b>第${i+1}章：${name}</b>
+ <div class="muted">推奨戦力 ${100+i*75} ／ 報酬 💎${250+i*100}・🪙${100+i*30}</div></div>
+ <button onclick="battle(${i+1})">${i<data.cleared?"再挑戦":"出撃！"}</button></div>`).join("");
+}
+function gacha(n,free){
+ if(free){
+  const today=new Date().toLocaleDateString("ja-JP");
+  if(data.freeDate===today)return;
+  data.freeDate=today;
+ }else{
+  const cost=n===1?300:2700;
+  if(data.pearls<cost){alert("パールが足りないよ！");return}
+  data.pearls-=cost;
+ }
+ let results=[];
+ for(let i=0;i<n;i++){
+  const r=Math.random()*100;
+  const pool=r<3?rarePool.filter(x=>x.rarity==="UR"):r<15?rarePool.filter(x=>x.rarity==="SSR"):r<40?rarePool.filter(x=>x.rarity==="SR"):starters;
+  const m=pool[Math.floor(Math.random()*pool.length)];
+  if(data.owned.some(x=>x.id===m.id)){
+   data.coins+=80;results.push(m.name+"（重複：コイン80）");
+  }else{
+   data.owned.push({...m,level:1});results.push(m.name+"【"+m.rarity+"】");
+  }
+ }
+ document.getElementById("result").innerHTML="<b>✨ 召喚結果！</b><br>"+results.join("<br>");
+ save();
+}
+function toggleTeam(id){
+ if(data.team.includes(id))data.team=data.team.filter(x=>x!==id);
+ else if(data.team.length>=5){alert("チームは最大5体だよ！");return}
+ else data.team.push(id);
+ save();
+}
+function levelUp(id){
+ const m=data.owned.find(x=>x.id===id);
+ if(data.coins<100){alert("コインが足りないよ！");return}
+ data.coins-=100;m.level=(m.level||1)+1;m.atk+=3;m.hp+=10;save();
+}
+function battle(stage){
+ const team=data.owned.filter(m=>data.team.includes(m.id));
+ if(!team.length){alert("チームを編成してね！");return}
+ let enemies=Array.from({length:5},(_,i)=>({
+  name:["スライム","ゴブリン","ダークバット","ストーンマン","ナイトウルフ"][i],
+  hp:45+stage*17,atk:9+stage*3
+ }));
+ let allies=team.map(m=>({name:m.name,hp:m.hp,atk:m.atk,max:m.hp}));
+ let log=[`⚔️ 第${stage}章の5対5バトル開始！`];
+ let round=1;
+ while(allies.some(x=>x.hp>0)&&enemies.some(x=>x.hp>0)&&round<=12){
+  log.push(`<b>【${round}ターン】</b>`);
+  for(const a of allies.filter(x=>x.hp>0)){
+   let target=enemies.find(x=>x.hp>0);if(!target)break;
+   target.hp-=a.atk;
+   log.push(`${a.name}の攻撃！ ${target.name}に${a.atk}ダメージ`);
+  }
+  for(const e of enemies.filter(x=>x.hp>0)){
+   let target=allies.find(x=>x.hp>0);if(!target)break;
+   target.hp-=e.atk;
+   log.push(`${e.name}の攻撃！ ${target.name}に${e.atk}ダメージ`);
+  }
+  round++;
+ }
+ const win=enemies.every(x=>x.hp<=0);
+ if(win){
+  const reward=250+(stage-1)*100;
+  data.pearls+=reward;data.coins+=100+(stage-1)*30;
+  data.cleared=Math.max(data.cleared,stage);
+  log.push(`🎉 勝利！ パール+${reward}、コイン+${100+(stage-1)*30}`);
+ }else log.push("💥 敗北…チームを育成して再挑戦しよう！");
+ document.getElementById("battleResult").innerHTML=`
+ <h3>${win?"🏆 ステージクリア！":"💀 バトル終了"}</h3>
+ <div class="battlegrid"><div class="team"><b>味方</b>${allies.map(x=>`<div class="fighter">${x.name}<div class="hp"><span style="width:${Math.max(0,x.hp)/x.max*100}%"></span></div>${Math.max(0,x.hp)} HP</div>`).join("")}</div>
+ <div class="team"><b>敵</b>${enemies.map(x=>`<div class="fighter">${x.name}<div class="hp"><span style="width:${Math.max(0,x.hp)/(45+stage*17)*100}%"></span></div>${Math.max(0,x.hp)} HP</div>`).join("")}</div></div>
+ <div class="log">${log.join("<br>")}</div>`;
+ save();
+}
+render();
+</script>
+</body>
+</html>
